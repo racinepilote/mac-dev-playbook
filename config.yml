@@ -1,0 +1,187 @@
+---
+downloads: ~/.ansible-downloads/
+
+configure_dotfiles: true
+configure_terminal: true
+configure_osx: true
+
+# Set to 'true' to configure the Dock via dockutil.
+configure_dock: false
+
+configure_sudoers: false
+sudoers_custom_config: ''
+# Example:
+# sudoers_custom_config: |
+#   # Allow users in admin group to use sudo with no password.
+#   %admin ALL=(ALL) NOPASSWD: ALL
+
+dockitems_remove:
+  - Launchpad
+  - Safari
+  - Contacts
+  - Maps
+  - Photos
+  - Messages
+  - FaceTime
+  - iTunes
+  - iBooks
+  - App Store
+  - System Preferences
+  - Pages
+  - Numbers
+  - Keynote
+
+dockitems_persist:
+  - name: Messages
+    path: "/Applications/Messages.app/"
+  - name: Safari
+    path: "/Applications/Safari.app/"
+    pos: 2
+  - name: Sublime Text
+    path: "/Applications/Sublime Text.app/"
+    pos: 3
+  - name: iTerm
+    path: /Applications/iTerm.app
+    pos: 3
+  - name: "Google Chrome"
+    path: "/Applications/Google Chrome.app"
+    pos: 4
+  - name: Slack
+    path: /Applications/Slack.app
+    pos: 5
+  - name: Mattermost
+    path: /Applications/Mattermost.app
+    pos: 6
+  - name: "Visual Studio Code"
+    path: "/Applications/Visual Studio Code.app"
+    pos: 10
+
+dotfiles_repo: https://github.com/racinepilote/dotfiles.git
+dotfiles_repo_accept_hostkey: true
+dotfiles_repo_local_destination: ~/Development/GitHub/dotfiles
+dotfiles_files:
+  - .zshrc
+  - .gitignore
+  - .gitconfig
+  - .gitmessage
+  - .aliases
+  - .inputrc
+  - .osx
+  - .vimrc
+
+homebrew_installed_packages:
+  - autoconf
+  - bash-completion
+  - doxygen
+  - gettext
+  - gifsicle
+  - git
+  - github/gh/gh
+  - go
+  - gpg
+  - httpie
+  - iperf
+  - libevent
+  - sqlite
+  - mcrypt
+  - nmap
+  - node
+  - nvm
+  - php
+  - ssh-copy-id
+  - cowsay
+  - readline
+  - openssl
+  - pv
+  - wget
+  - wrk
+  - zsh-history-substring-search
+  - yarn
+  - php
+  - redis
+  - terraform
+
+homebrew_taps:
+  - homebrew/core
+  - homebrew/cask
+
+homebrew_cask_appdir: /Applications
+homebrew_cask_apps:
+  - chromedriver
+  - docker
+  - dropbox
+  - firefox
+  - google-chrome
+  - handbrake
+  - licecap
+  - sequel-pro
+  - sublime-text
+  - transmit
+  - vagran
+  - iterm2
+  - notion
+  - zoom
+  - nordvpn
+  - virtualbox
+  - spotify
+  - jetbrains-toolbox
+  - postman
+  - visual-studio-code
+
+# See `geerlingguy.mas` role documentation for usage instructions.
+mas_installed_apps:
+  - { id: 1333542190, name: "1Password" }
+  - { id: 1303222628, name: "Paprika" }
+  - { id: 1303222628, name: "Paprika" }
+  - { id: 1295203466, name: "Microsoft Remote Desktop" }
+  - { id: 1142051783, name: "LG Screen Manager" }
+  - { id: 1478447657, name: "Geekbench 5" }
+  - { id: 1116599239, name: "NordVPN IKE" }
+  - { id: 803453959, name: "Slack for Desktop" }
+  - { id: 406056744, name: "Evernote" }
+
+mas_email: ""
+mas_password: ""
+
+osx_script: "~/.osx --no-restart"
+
+# Install packages from other package managers.
+# Note: You are responsible for making sure the required package managers are
+# installed, eg. through homebrew.
+composer_packages: []
+# - name: drush
+#   state: present # present/absent, default: present
+#   version: "^8.1" # default: N/A
+gem_packages: []
+# - name: bundler
+#   state: present # present/absent/latest, default: present
+#   version: "~> 1.15.1" # default: N/A
+npm_packages: []
+# - name: webpack
+#   state: present # present/absent/latest, default: present
+#   version: "^2.6" # default: N/A
+pip_packages: []
+# - name: mkdocs
+#   state: present # present/absent/latest, default: present
+#   version: "0.16.3" # default: N/A
+
+# Set to 'true' to configure Sublime Text.
+configure_sublime: true
+sublime_base_path: '~/Library/Application Support/Sublime Text'
+sublime_config_path: "Packages/User"
+sublime_package_control:
+  - "DocBlockr"
+  - "Dockerfile Syntax Highlighting"
+  - "FileDiffs"
+  - "GitHub Flavored Markdown Preview"
+  - "Jinja2"
+  - "Package Control"
+  - "PHP-Twig"
+  - "Pretty JSON"
+  - "SublimeLinter"
+  - "SublimeLinter-contrib-yamllint"
+  - "TrailingSpaces"
+  - "WordCount"
+
+# Glob pattern to ansible task files to run after all other tasks are finished.
+post_provision_tasks: []
