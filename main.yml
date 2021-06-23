@@ -3,12 +3,13 @@
 
   vars_files:
     - default.config.yml
-
-  vars_prompt:
-    - name: "mas_email"
-      prompt: "App Store email"
-    - name: "mas_password"
-      prompt: "App Store password"
+  
+  pre_tasks:
+    - name: Include playbook configuration.
+      include_vars: "{{ item }}"
+      with_fileglob:
+        - "{{ playbook_dir }}/config.yml"
+      tags: ['always']
 
   roles:
     - role: elliotweiser.osx-command-line-tools
@@ -25,11 +26,16 @@
       tags: ['dock']
 
   tasks:
+    - import_tasks: tasks/sudoers.yml
+      when: configure_sudoers
+      tags: ['sudoers']
+ 
+    - import_tasks: tasks/terminal.yml
+      when: configure_terminal
+      tags: ['terminal']
+
     - import_tasks: tasks/dockitems.yml
       tags: [ 'macos' ]
-
-    - import_tasks: tasks/workspace.yml
-      tags: [ 'dev' ]
 
     - import_tasks: tasks/iterm.yml
       tags: [ 'dev' ]
@@ -37,10 +43,6 @@
     - import_tasks: tasks/sudoers.yml
       when: configure_sudoers
       tags: ['sudoers']
-
-    - import_tasks: tasks/terminal.yml
-      when: configure_terminal
-      tags: ['terminal']
 
     - import_tasks: tasks/osx.yml
       when: configure_osx
