@@ -1,5 +1,9 @@
 ---
-# TODO: Use sudo once .osx can be run via root with no user interaction.
 - name: Run .osx dotfiles.
   command: "{{ osx_script }}"
   changed_when: false
+
+- name: Copy plist. Remap caps lock to escapte.
+  copy:
+    src: files/plist/com.ldaws.CapslockBackspace.plist
+    dest: ~/Library/LaunchAgents/com.ldaws.CapslockBackspace.plist
