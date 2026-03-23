@@ -3,6 +3,17 @@
   command: "{{ osx_script }}"
   changed_when: false
 
+- name: Use F1, F2, etc. keys as standard function keys.
+  community.general.osx_defaults:
+    domain: NSGlobalDomain
+    key: com.apple.keyboard.fnState
+    type: bool
+    value: true
+
+- name: Apply macOS settings changes.
+  command: /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
+  changed_when: false
+
 - name: Copy plist. Remap caps lock to escapte.
   copy:
     src: files/plist/com.ldaws.CapslockBackspace.plist

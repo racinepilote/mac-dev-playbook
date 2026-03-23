@@ -1,13 +1,15 @@
 ---
-- name: Remove all crap from Dock
-  shell: dockutil --remove '{{ item }}'
-  ignore_errors: true
+- name: Remove unwanted Dock items (skip if absent)
+  shell: dockutil --find '{{ item }}' && dockutil --remove '{{ item }}'
+  register: dock_remove
+  changed_when: "'was removed' in dock_remove.stdout"
+  failed_when: false
   with_items: "{{ dockitems_to_remove }}"
 
-- name: Check if items in dock exist
-  shell: dockutil --find '{{ item.name }}' || dockutil --add '{{ item.path }}'
-  with_items: "{{ dockitems_to_persist }}"
-
-- name: Fix order
-  shell: dockutil --move '{{ item.name }}' --position {{ item.pos }}
+- name: Ensure dock items are present at correct position
+  shell: >
+    dockutil --find '{{ item.name }}'
+    && dockutil --move '{{ item.name }}' --position {{ item.pos }}
+    || dockutil --add '{{ item.path }}' --position {{ item.pos }}
+  failed_when: false
   with_items: "{{ dockitems_to_persist }}"

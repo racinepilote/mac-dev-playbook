@@ -1,185 +1,118 @@
 # Mac Development Ansible Playbook
 
-[![CI][badge-gh-actions]][link-gh-actions]
+This playbook installs and configures the software I use on my Mac for development. Built on top of [geerlingguy/mac-dev-playbook](https://github.com/geerlingguy/mac-dev-playbook).
 
-This playbook installs and configures most of the software I use on my Mac for web and software development. Some things in macOS are slightly difficult to automate, so I still have a few manual installation steps, but at least it's all documented here.
+**Requirements:** macOS 26+ (Apple Silicon), Homebrew 4.x, Ansible 2.20+, mas 1.8+
 
-## Installation
+## Quick Start
 
-  1. Ensure Apple's command line tools are installed (`xcode-select --install` to launch the installer).
-  2. [Install Ansible](https://docs.ansible.com/ansible/latest/installation_guide/index.html):
+Bootstrap a fresh Mac from scratch:
 
-     1. Run the following command to add Python 3 to your $PATH: `export PATH="$HOME/Library/Python/3.8/bin:/opt/homebrew/bin:$PATH"`
-     2. Upgrade Pip: `sudo pip3 install --upgrade pip`
-     3. Install Ansible: `pip3 install ansible`
-
-  3. Clone or download this repository to your local drive.
-  4. Run `ansible-galaxy install -r requirements.yml` inside this directory to install required Ansible roles.
-  5. Run `ansible-playbook main.yml --ask-become-pass` inside this directory. Enter your macOS account password when prompted for the 'BECOME' password.
-
-> Note: If some Homebrew commands fail, you might need to agree to Xcode's license or fix some other Brew issue. Run `brew doctor` to see if this is the case.
-
-### Use with a remote Mac
-
-You can use this playbook to manage other Macs as well; the playbook doesn't even need to be run from a Mac at all! If you want to manage a remote Mac, either another Mac on your network, or a hosted Mac like the ones from [MacStadium](https://www.macstadium.com), you just need to make sure you can connect to it with SSH:
-
-  1. (On the Mac you want to connect to:) Go to System Preferences > Sharing.
-  2. Enable 'Remote Login'.
-
-> You can also enable remote login on the command line:
->
->     sudo systemsetup -setremotelogin on
-
-Then edit the `inventory` file in this repository and change the line that starts with `127.0.0.1` to:
-
-```
-[ip address or hostname of mac]  ansible_user=[mac ssh username]
+```bash
+curl -fsSL https://raw.githubusercontent.com/racinepilote/mac-dev-playbook/main/install.sh | bash
 ```
 
-If you need to supply an SSH password (if you don't use SSH keys), make sure to pass the `--ask-pass` parameter to the `ansible-playbook` command.
+The script handles everything: Xcode CLI Tools, Rosetta 2, Homebrew, pipx, Ansible, cloning the repo, and running the playbook.
 
-### Running a specific set of tagged tasks
+## Manual Installation
 
-You can filter which part of the provisioning process to run by specifying a set of tags using `ansible-playbook`'s `--tags` flag. The tags available are `dotfiles`, `homebrew`, `mas`, `extra-packages` and `osx`.
+1. Install Xcode Command Line Tools:
 
-    ansible-playbook main.yml -K --tags "dotfiles,homebrew"
+       xcode-select --install
+
+2. Install Homebrew, pipx, and Ansible:
+
+       /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+       brew install pipx
+       pipx ensurepath
+       pipx install ansible-core
+
+3. Clone and run:
+
+       git clone https://github.com/racinepilote/mac-dev-playbook.git
+       cd mac-dev-playbook
+       ansible-galaxy install -r requirements.yml
+       ansible-playbook main.yml --ask-become-pass
+
+## Running Specific Tags
+
+```bash
+ansible-playbook main.yml --ask-become-pass --tags "homebrew,dotfiles"
+```
+
+Available tags: `homebrew`, `dotfiles`, `mas`, `dock`, `macos`, `dev`, `osx`, `extra-packages`, `sublime-text`, `vim`, `config`, `sudoers`, `terminal`, `post`
+
+## What Gets Installed
+
+### Homebrew Cask Apps
+
+1Password, Chrome, Claude, Docker, Dropbox, Firefox, Geekbench, iTerm2, JetBrains Toolbox, LICEcap, Microsoft Office, Microsoft Remote Desktop, Microsoft Teams, Notion, NordVPN, Postman, Slack, Stats, Sublime Text, TG Pro, Transmission, Transmit, Visual Studio Code, Zoom
+
+### Homebrew Packages
+
+autoconf, bash-completion, cowsay, doxygen, gettext, gh, gifsicle, git, go, gpg, httpie, iperf, libevent, mas, nmap, node, nvm, openssl, php, pv, readline, redis, sqlite, ssh-copy-id, terraform, wget, yarn, zsh-history-substring-search
+
+### Mac App Store (via mas)
+
+Xcode, Paprika, Apple Developer
+
+> **Note:** mas 1.8+ requires you to be signed into the App Store manually before running the playbook. The `signin` command has been removed.
+
+### NPM Global Packages
+
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) (`@anthropic-ai/claude-code`)
+
+### Dotfiles
+
+My [dotfiles](https://github.com/racinepilote/dotfiles) are symlinked into the home directory: `.zshrc`, `.gitconfig`, `.gitignore`, `.gitmessage`, `.aliases`, `.inputrc`, `.osx`, `.vimrc`
+
+### ~/.config
+
+The `config` tag deploys configuration files for: GitHub CLI (`gh`), global git ignore, Google Cloud SDK (`gcloud`), GitHub Copilot IntelliJ MCP.
+
+### Dock
+
+The playbook clears default Dock items and sets up a custom layout: Messages, Mail, Calendar, Safari, Sublime Text, iTerm, Chrome, Firefox, Postman, Slack, Microsoft Teams, Xcode, Notion, 1Password, Activity Monitor, Claude
+
+### macOS Settings
+
+The `.osx` dotfile configures macOS preferences. Caps Lock is remapped to Escape via a launch agent.
 
 ## Overriding Defaults
 
-Not everyone's development environment and preferred software configuration is the same.
-
-You can override any of the defaults configured in `default.config.yml` by creating a `config.yml` file and setting the overrides in that file. For example, you can customize the installed packages and apps with something like:
+Create a `config.yml` to override anything in `default.config.yml`:
 
 ```yaml
 homebrew_installed_packages:
-  - cowsay
   - git
   - go
+  - node
 
-mas_installed_apps:
-  - { id: 443987910, name: "1Password" }
-  - { id: 498486288, name: "Quick Resizer" }
-  - { id: 557168941, name: "Tweetbot" }
-  - { id: 497799835, name: "Xcode" }
-
-composer_packages:
-  - name: hirak/prestissimo
-  - name: drush/drush
-    version: '^8.1'
-
-gem_packages:
-  - name: bundler
-    state: latest
+homebrew_cask_apps:
+  - docker
+  - firefox
 
 npm_packages:
-  - name: webpack
-
-pip_packages:
-  - name: mkdocs
+  - name: "@anthropic-ai/claude-code"
+    state: present
+    executable: /opt/homebrew/bin/npm
 
 configure_dock: true
-dockitems_remove:
-  - Launchpad
-  - TV
-dockitems_persist:
-  - name: "Sublime Text"
-    path: "/Applications/Sublime Text.app/"
-    pos: 5
+configure_config: true
+configure_sublime: true
 ```
 
-Any variable can be overridden in `config.yml`; see the supporting roles' documentation for a complete list of available variables.
+The `config.yml` file is gitignored -- it contains your personal overrides and stays local (or in iCloud).
 
-## Included Applications / Configuration (Default)
+## Manual Steps
 
-Applications (installed with Homebrew Cask):
+Some things still require manual setup after running the playbook:
 
-  - [ChromeDriver](https://sites.google.com/a/chromium.org/chromedriver/)
-  - [Docker](https://www.docker.com/)
-  - [Dropbox](https://www.dropbox.com/)
-  - [Firefox](https://www.mozilla.org/en-US/firefox/new/)
-  - [Google Chrome](https://www.google.com/chrome/)
-  - [Handbrake](https://handbrake.fr/)
-  - [Homebrew](http://brew.sh/)
-  - [LICEcap](http://www.cockos.com/licecap/)
-  - [LimeChat](http://limechat.net/mac/)
-  - [MacVim](http://macvim-dev.github.io/macvim/)
-  - [nvALT](http://brettterpstra.com/projects/nvalt/)
-  - [Sequel Pro](https://www.sequelpro.com/) (MySQL client)
-  - [Skitch](https://evernote.com/skitch/)
-  - [Slack](https://slack.com/)
-  - [Sublime Text](https://www.sublimetext.com/)
-  - [Transmit](https://panic.com/transmit/) (S/FTP client)
-  - [Vagrant](https://www.vagrantup.com/)
+1. Sign into the Mac App Store (required for mas to install apps)
+2. `gcloud auth login` for Google Cloud credentials
+3. `gh auth login` for GitHub CLI authentication
+4. Commit/push any local dotfiles changes before re-running the playbook
 
-Packages (installed with Homebrew):
+## Based On
 
-  - autoconf
-  - bash-completion
-  - doxygen
-  - gettext
-  - gifsicle
-  - git
-  - go
-  - gpg
-  - hub
-  - httpie
-  - iperf
-  - libevent
-  - sqlite
-  - mcrypt
-  - nmap
-  - node
-  - nvm
-  - php
-  - ssh-copy-id
-  - cowsay
-  - readline
-  - openssl
-  - pv
-  - wget
-
-My [dotfiles](https://github.com/geerlingguy/dotfiles) are also installed into the current user's home directory, including the `.osx` dotfile for configuring many aspects of macOS for better performance and ease of use. You can disable dotfiles management by setting `configure_dotfiles: no` in your configuration.
-
-Finally, there are a few other preferences and settings added on for various apps and services.
-
-## Future additions
-
-### Things that still need to be done manually
-
-It's my hope that I can get the rest of these things wrapped up into Ansible playbooks soon, but for now, these steps need to be completed manually (assuming you already have Xcode and Ansible installed, and have run this playbook).
-
-  1. Set JJG-Term as the default Terminal theme (it's installed, but not set as default automatically).
-  3. Install all the apps that aren't yet in this setup (see below).
-  4. Remap Caps Lock to Escape (requires macOS Sierra 10.12.1+).
-  5. Set trackpad tracking rate.
-  6. Set mouse tracking rate.
-  7. Configure extra Mail and/or Calendar accounts (e.g. Google, Exchange, etc.).
-
-### Configuration to be added:
-
-  - I have vim configuration in the repo, but I still need to add the actual installation:
-    ```
-    mkdir -p ~/.vim/autoload
-    mkdir -p ~/.vim/bundle
-    cd ~/.vim/autoload
-    curl https://raw.githubusercontent.com/tpope/vim-pathogen/master/autoload/pathogen.vim > pathogen.vim
-    cd ~/.vim/bundle
-    git clone git://github.com/scrooloose/nerdtree.git
-    ```
-
-## Testing the Playbook
-
-Many people have asked me if I often wipe my entire workstation and start from scratch just to test changes to the playbook. Nope! Instead, I posted instructions for how I build a [Mac OS X VirtualBox VM](https://github.com/geerlingguy/mac-osx-virtualbox-vm), on which I can continually run and re-run this playbook to test changes and make sure things work correctly.
-
-Additionally, this project is [continuously tested on GitHub Actions' macOS infrastructure](https://github.com/geerlingguy/mac-dev-playbook/actions?query=workflow%3ACI).
-
-## Ansible for DevOps
-
-Check out [Ansible for DevOps](https://www.ansiblefordevops.com/), which teaches you how to automate almost anything with Ansible.
-
-## Author
-
-This project was created by [Jeff Geerling](https://www.jeffgeerling.com/) (originally inspired by [MWGriffin/ansible-playbooks](https://github.com/MWGriffin/ansible-playbooks)).
-
-[badge-gh-actions]: https://github.com/geerlingguy/mac-dev-playbook/workflows/CI/badge.svg?event=push
-[link-gh-actions]: https://github.com/geerlingguy/mac-dev-playbook/actions?query=workflow%3ACI
+[Jeff Geerling's mac-dev-playbook](https://github.com/geerlingguy/mac-dev-playbook) -- check out [Ansible for DevOps](https://www.ansiblefordevops.com/) for more.

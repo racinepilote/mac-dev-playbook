@@ -1,0 +1,56 @@
+---
+- name: Ensure ~/.config directories exist.
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "~/.config/gh"
+    - "~/.config/git"
+    - "~/.config/gcloud/configurations"
+    - "~/.config/github-copilot/intellij"
+
+- name: Copy gh config.
+  copy:
+    src: files/config/gh/config.yml
+    dest: ~/.config/gh/config.yml
+    mode: '0644'
+
+- name: Copy global git ignore.
+  copy:
+    src: files/config/git/ignore
+    dest: ~/.config/git/ignore
+    mode: '0644'
+
+- name: Copy gcloud active config.
+  copy:
+    src: files/config/gcloud/active_config
+    dest: ~/.config/gcloud/active_config
+    mode: '0644'
+
+- name: Copy gcloud default configuration.
+  copy:
+    src: files/config/gcloud/configurations/config_default
+    dest: ~/.config/gcloud/configurations/config_default
+    mode: '0644'
+
+- name: Copy GitHub Copilot IntelliJ MCP config.
+  copy:
+    src: files/config/github-copilot/intellij/mcp.json
+    dest: ~/.config/github-copilot/intellij/mcp.json
+    mode: '0644'
+
+- name: Find IntelliJ IDEA config directory.
+  find:
+    paths: "~/Library/Application Support/JetBrains"
+    patterns: "IntelliJIdea*"
+    file_type: directory
+  register: intellij_dirs
+
+- name: Copy IntelliJ terminal config.
+  copy:
+    src: files/config/jetbrains/terminal.xml
+    dest: "{{ item.path }}/options/terminal.xml"
+    mode: '0644'
+  loop: "{{ intellij_dirs.files }}"
+  when: intellij_dirs.files | length > 0

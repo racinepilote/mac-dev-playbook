@@ -1,9 +1,8 @@
 ---
-downloads: ~/.ansible-downloads/
-
 configure_dotfiles: true
 configure_terminal: true
 configure_osx: true
+configure_config: false
 
 # Set to 'true' to configure the Dock via dockutil.
 configure_dock: false
@@ -18,7 +17,7 @@ dockitems_to_persist: []
 #   pos: 5
 
 configure_sudoers: false
-sudoers_custom_config: ''
+sudoers_custom_config: ""
 # Example:
 # sudoers_custom_config: |
 #   # Allow users in admin group to use sudo with no password.
@@ -27,6 +26,7 @@ sudoers_custom_config: ''
 dotfiles_repo: https://github.com/geerlingguy/dotfiles.git
 dotfiles_repo_accept_hostkey: true
 dotfiles_repo_local_destination: ~/Development/GitHub/dotfiles
+dotfiles_repo_version: master
 dotfiles_files:
   - .zshrc
   - .gitignore
@@ -42,29 +42,27 @@ homebrew_installed_packages:
   - gettext
   - gifsicle
   - git
-  - github/gh/gh
+  - gh
   - go
   - gpg
   - httpie
   - iperf
   - libevent
   - sqlite
-  - mcrypt
   - nmap
   - node
   - nvm
   - php
+  - pngpaste
   - ssh-copy-id
-  - cowsay
   - readline
   - openssl
   - pv
   - wget
+  - wrk
   - zsh-history-substring-search
 
-homebrew_taps:
-  - homebrew/core
-  - homebrew/cask
+homebrew_taps: []
 
 homebrew_cask_appdir: /Applications
 homebrew_cask_apps:
@@ -73,8 +71,9 @@ homebrew_cask_apps:
   - dropbox
   - firefox
   - google-chrome
+  - handbrake
   - licecap
-  - sequel-pro
+  - sequel-ace
   - slack
   - sublime-text
   - transmit
@@ -83,7 +82,6 @@ homebrew_cask_apps:
 mas_installed_apps: []
 mas_email: ""
 mas_password: ""
-mas_signin_dialog: true
 
 osx_script: "~/.osx --no-restart"
 
@@ -109,7 +107,7 @@ pip_packages: []
 
 # Set to 'true' to configure Sublime Text.
 configure_sublime: false
-sublime_base_path: '~/Library/Application Support/Sublime Text'
+sublime_base_path: "~/Library/Application Support/Sublime Text"
 sublime_config_path: "Packages/User"
 sublime_package_control:
   - "DocBlockr"
@@ -118,12 +116,12 @@ sublime_package_control:
   - "GitHub Flavored Markdown Preview"
   - "Jinja2"
   - "Package Control"
-  - "PHP-Twig"
   - "Pretty JSON"
   - "SublimeLinter"
   - "SublimeLinter-contrib-yamllint"
+  - "Theme - Cobalt2"
   - "TrailingSpaces"
-  - "WordCount"
+  - "WordingStatus"
 
 # Glob pattern to ansible task files to run after all other tasks are finished.
 post_provision_tasks: []
