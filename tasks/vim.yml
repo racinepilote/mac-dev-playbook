@@ -5,3 +5,7 @@
     dest: "~/.vim/bundle/Vundle.vim"
     clone: yes
     update: yes
+
+- name: Install Vim plugins via Vundle.
+  shell: echo | vim +PluginInstall +qall &>/dev/null
+  changed_when: false

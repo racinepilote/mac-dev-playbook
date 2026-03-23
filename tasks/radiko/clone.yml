@@ -1,0 +1,12 @@
+---
+- name: Check if Radiko repo is already cloned.
+  stat:
+    path: "{{ radiko_project_dir }}"
+  register: radiko_dir
+
+- name: Clone Radiko repository.
+  git:
+    repo: git@github.com:radiko-ca/radiko.git
+    dest: "{{ radiko_project_dir }}"
+    accept_hostkey: true
+  when: not radiko_dir.stat.exists

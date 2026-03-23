@@ -1,0 +1,84 @@
+---
+# Beautify iTerm2 - Snazzy theme + Minimal appearance
+# Based on: https://medium.com/airfrance-klm/beautify-your-iterm2-and-prompt
+
+# --- iTerm2 Appearance ---
+
+- name: Set iTerm2 theme to Minimal (removes title bar)
+  community.general.osx_defaults:
+    domain: com.googlecode.iterm2
+    key: TabStyleWithAutomaticOption
+    type: int
+    value: 5
+  notify: Restart iTerm2
+
+- name: Reduce tab outline prominence
+  community.general.osx_defaults:
+    domain: com.googlecode.iterm2
+    key: HideTabCloseButton
+    type: bool
+    value: true
+
+# --- Snazzy Color Theme ---
+
+- name: Download iTerm2 Snazzy color theme
+  get_url:
+    url: https://raw.githubusercontent.com/sindresorhus/iterm2-snazzy/main/Snazzy.itermcolors
+    dest: /tmp/Snazzy.itermcolors
+    mode: "0644"
+
+- name: Import Snazzy color theme into iTerm2
+  command: open /tmp/Snazzy.itermcolors
+  changed_when: false
+
+# --- Oh My Zsh ---
+
+- name: Check if Oh My Zsh is installed
+  stat:
+    path: "~/.oh-my-zsh"
+  register: ohmyzsh_installed
+
+- name: Install Oh My Zsh
+  shell: >
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+  when: not ohmyzsh_installed.stat.exists
+
+# --- Pure Prompt + Plugins via zplug ---
+
+- name: Check if zplug is initialized
+  stat:
+    path: "{{ zplug_home }}/init.zsh"
+  register: zplug_init
+  vars:
+    zplug_home: "{{ ansible_env.HOMEBREW_PREFIX | default('/opt/homebrew') }}/opt/zplug"
+
+- name: Deploy .zshrc with pure prompt and zplug configuration
+  template:
+    src: ../files/zsh/zshrc.j2
+    dest: "~/.zshrc"
+    backup: true
+  tags: ['zsh']
+
+- name: Install zplug via Homebrew
+  community.general.homebrew:
+    name: zplug
+    state: present
+
+- name: Install zplug plugins
+  shell: |
+    export ZPLUG_HOME="{{ ansible_env.HOMEBREW_PREFIX | default('/opt/homebrew') }}/opt/zplug"
+    source "$ZPLUG_HOME/init.zsh"
+    zplug "mafredri/zsh-async", from:github
+    zplug "sindresorhus/pure", use:pure.zsh, from:github, as:theme
+    zplug "zsh-users/zsh-syntax-highlighting", as:plugin, defer:2
+    zplug "zsh-users/zsh-autosuggestions", as:plugin, defer:2
+    zplug install
+  args:
+    executable: /bin/zsh
+  changed_when: false
+
+  # Handlers
+- name: Restart iTerm2 notification
+  debug:
+    msg: "Please restart iTerm2 to apply the new theme settings."
+  tags: ['never', 'restart-iterm2']

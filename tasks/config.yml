@@ -54,3 +54,19 @@
     mode: '0644'
   loop: "{{ intellij_dirs.files }}"
   when: intellij_dirs.files | length > 0
+
+- name: Ensure IntelliJ tools directory exists.
+  file:
+    path: "{{ item.path }}/tools"
+    state: directory
+    mode: '0755'
+  loop: "{{ intellij_dirs.files }}"
+  when: intellij_dirs.files | length > 0
+
+- name: Copy IntelliJ External Tools config (Open iTerm2 Here).
+  copy:
+    src: "files/config/jetbrains/External Tools.xml"
+    dest: "{{ item.path }}/tools/External Tools.xml"
+    mode: '0644'
+  loop: "{{ intellij_dirs.files }}"
+  when: intellij_dirs.files | length > 0

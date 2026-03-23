@@ -1,0 +1,15 @@
+---
+- name: Setup Radiko development environment.
+  hosts: all
+
+  vars:
+    radiko_project_dir: "{{ ansible_env.HOME }}/radiko"
+    plane_install_dir: "{{ radiko_project_dir }}/plane"
+    plane_port: 4680
+
+  tasks:
+    - import_tasks: tasks/radiko/clone.yml
+      tags: ['clone']
+
+    - import_tasks: tasks/radiko/plane.yml
+      tags: ['plane']

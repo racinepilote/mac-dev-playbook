@@ -1,0 +1,9 @@
+<toolSet name="External Tools">
+  <tool name="Open iTerm2 Here" description="Open iTerm2 in the current project directory" showInMainMenu="true" showInEditor="true" showInProject="true" showInSearchPopup="true" disabled="false" useConsole="false" showConsoleOnStdOut="false" showConsoleOnStdErr="false" synchronizeAfterRun="false">
+    <exec>
+      <option name="COMMAND" value="/usr/bin/open" />
+      <option name="PARAMETERS" value="-a iTerm $ProjectFileDir$" />
+      <option name="WORKING_DIRECTORY" value="$ProjectFileDir$" />
+    </exec>
+  </tool>
+</toolSet>

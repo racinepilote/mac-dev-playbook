@@ -42,6 +42,10 @@
     - import_tasks: tasks/iterm.yml
       tags: ['dev']
 
+    - import_tasks: tasks/iterm-beautify.yml
+      when: configure_iterm_beautify | default(true)
+      tags: ['dev', 'iterm-beautify']
+
     - import_tasks: tasks/osx.yml
       when: configure_osx
       tags: ['osx']

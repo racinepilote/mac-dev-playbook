@@ -1,0 +1,106 @@
+---
+- name: Set Plane deployment directory.
+  set_fact:
+    plane_deploy_dir: "{{ plane_install_dir }}/deployments/cli/community"
+  tags: ['plane', 'plane-setup', 'plane-start']
+
+- name: Check if Plane is already cloned.
+  stat:
+    path: "{{ plane_install_dir }}"
+  register: plane_dir
+
+- name: Clone Plane repository.
+  git:
+    repo: https://github.com/makeplane/plane.git
+    dest: "{{ plane_install_dir }}"
+    version: master
+  when: not plane_dir.stat.exists
+
+- name: Check if .env file exists in deployment directory.
+  stat:
+    path: "{{ plane_deploy_dir }}/.env"
+  register: plane_env
+  tags: ['plane', 'plane-setup', 'plane-start']
+
+- name: Copy variables.env to .env for selfhost deployment.
+  copy:
+    src: "{{ plane_deploy_dir }}/variables.env"
+    dest: "{{ plane_deploy_dir }}/.env"
+    remote_src: true
+  when: not plane_env.stat.exists
+  tags: ['plane-setup']
+
+- name: Set custom HTTP port in .env.
+  lineinfile:
+    path: "{{ plane_deploy_dir }}/.env"
+    regexp: "^LISTEN_HTTP_PORT="
+    line: "LISTEN_HTTP_PORT={{ plane_port }}"
+  tags: ['plane-setup']
+
+- name: Set WEB_URL to match custom port.
+  lineinfile:
+    path: "{{ plane_deploy_dir }}/.env"
+    regexp: "^WEB_URL="
+    line: "WEB_URL=http://localhost:{{ plane_port }}"
+  tags: ['plane-setup']
+
+- name: Set CORS_ALLOWED_ORIGINS to match custom port.
+  lineinfile:
+    path: "{{ plane_deploy_dir }}/.env"
+    regexp: "^CORS_ALLOWED_ORIGINS="
+    line: "CORS_ALLOWED_ORIGINS=http://localhost:{{ plane_port }}"
+  tags: ['plane-setup']
+
+- name: Create docker-compose.override.yml for restart policy.
+  copy:
+    dest: "{{ plane_deploy_dir }}/docker-compose.override.yml"
+    content: |
+      services:
+        web:
+          restart: always
+        space:
+          restart: always
+        admin:
+          restart: always
+        live:
+          restart: always
+        api:
+          restart: always
+        worker:
+          restart: always
+        beat-worker:
+          restart: always
+        plane-db:
+          restart: always
+        plane-redis:
+          restart: always
+        plane-mq:
+          restart: always
+        plane-minio:
+          restart: always
+        proxy:
+          restart: always
+  tags: ['plane-setup', 'plane-start']
+
+- name: Start Plane with Docker Compose.
+  command: docker compose -f docker-compose.yml -f docker-compose.override.yml --env-file .env up -d
+  args:
+    chdir: "{{ plane_deploy_dir }}"
+  tags: ['plane-start']
+
+- name: Verify Plane containers are running.
+  command: docker compose -f docker-compose.yml ps
+  args:
+    chdir: "{{ plane_deploy_dir }}"
+  register: plane_status
+  changed_when: false
+  tags: ['plane-start']
+
+- name: Show Plane status.
+  debug:
+    msg: |
+      {{ plane_status.stdout }}
+
+      Plane est accessible sur : http://localhost:{{ plane_port }}
+  when: plane_status.stdout is defined
+  tags: ['plane-start']

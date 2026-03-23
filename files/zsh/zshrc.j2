@@ -1,0 +1,51 @@
+# ~/.zshrc - Managed by Ansible (mac-dev-playbook)
+# Based on: https://medium.com/airfrance-klm/beautify-your-iterm2-and-prompt
+
+# --- Oh My Zsh ---
+export ZSH=~/.oh-my-zsh
+
+# Disable oh-my-zsh themes to use pure prompt
+ZSH_THEME=""
+
+source $ZSH/oh-my-zsh.sh
+
+# --- zplug (zsh plugin manager) ---
+export ZPLUG_HOME=$(brew --prefix)/opt/zplug
+source $ZPLUG_HOME/init.zsh
+
+# Pure prompt
+zplug "mafredri/zsh-async", from:github
+zplug "sindresorhus/pure", use:pure.zsh, from:github, as:theme
+
+# Syntax highlighting
+zplug "zsh-users/zsh-syntax-highlighting", as:plugin, defer:2
+
+# Auto suggestions (based on history)
+zplug "zsh-users/zsh-autosuggestions", as:plugin, defer:2
+
+# Load plugins
+zplug load
+
+# Install plugins if there are plugins that have not been installed
+if ! zplug check --verbose; then
+    printf "Install? [y/N]: "
+    if read -q; then
+        echo; zplug install
+    fi
+fi
+
+# --- History ---
+HISTSIZE=10000
+SAVEHIST=10000
+setopt HIST_IGNORE_DUPS
+setopt SHARE_HISTORY
+
+# --- Aliases ---
+if [ -f ~/.aliases ]; then
+    source ~/.aliases
+fi
+
+# --- NVM ---
+export NVM_DIR="$HOME/.nvm"
+[ -s "$(brew --prefix)/opt/nvm/nvm.sh" ] && \. "$(brew --prefix)/opt/nvm/nvm.sh"
+[ -s "$(brew --prefix)/opt/nvm/etc/bash_completion.d/nvm" ] && \. "$(brew --prefix)/opt/nvm/etc/bash_completion.d/nvm"
