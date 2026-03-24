@@ -6,6 +6,9 @@
     radiko_project_dir: "{{ ansible_env.HOME }}/radiko"
     plane_install_dir: "{{ radiko_project_dir }}/plane"
     plane_port: 4680
+    plane_domain: "{{ ansible_hostname }}"
+    plane_workspace_slug: "radiko"
+    plane_api_key: "{{ lookup('file', playbook_dir + '/.env') | regex_search('PLANE_API_KEY=(.+)', '\\1') | first }}"
 
   tasks:
     - import_tasks: tasks/radiko/clone.yml
@@ -13,3 +16,6 @@
 
     - import_tasks: tasks/radiko/plane.yml
       tags: ['plane']
+
+    - import_tasks: tasks/radiko/plane-mcp.yml
+      tags: ['plane-mcp']

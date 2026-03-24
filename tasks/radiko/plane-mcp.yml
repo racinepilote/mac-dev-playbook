@@ -1,0 +1,57 @@
+---
+# Configure Plane MCP server for Claude Code.
+# Requires: plane_api_key variable (from vault or config).
+
+- name: Install uv (Python package manager).
+  shell: curl -LsSf https://astral.sh/uv/install.sh | sh
+  args:
+    creates: "{{ ansible_env.HOME }}/.local/bin/uv"
+  tags: ['plane-mcp', 'plane-mcp-install']
+
+- name: Ensure uv is available.
+  command: "{{ ansible_env.HOME }}/.local/bin/uv --version"
+  register: uv_version
+  changed_when: false
+  tags: ['plane-mcp', 'plane-mcp-install']
+
+- name: Show uv version.
+  debug:
+    msg: "uv installed: {{ uv_version.stdout }}"
+  tags: ['plane-mcp', 'plane-mcp-install']
+
+- name: Verify uvx can resolve plane-mcp-server.
+  command: "{{ ansible_env.HOME }}/.local/bin/uvx --from plane-mcp-server --python 3.10 python -c 'import plane_mcp; print(plane_mcp.__name__)'"
+  register: plane_mcp_check
+  changed_when: false
+  failed_when: plane_mcp_check.rc != 0
+  tags: ['plane-mcp', 'plane-mcp-test']
+
+- name: Write Plane MCP config to project .mcp.json.
+  copy:
+    content: |
+      {
+        "mcpServers": {
+          "plane": {
+            "type": "stdio",
+            "command": "{{ ansible_env.HOME }}/.local/bin/uvx",
+            "args": ["plane-mcp-server", "stdio"],
+            "env": {
+              "PLANE_API_KEY": "{{ plane_api_key }}",
+              "PLANE_BASE_URL": "http://{{ plane_domain }}:{{ plane_port }}",
+              "PLANE_WORKSPACE_SLUG": "{{ plane_workspace_slug }}"
+            }
+          }
+        }
+      }
+    dest: "{{ radiko_project_dir }}/.mcp.json"
+    mode: "0600"
+  tags: ['plane-mcp', 'plane-mcp-config']
+
+- name: Show MCP configuration status.
+  debug:
+    msg: |
+      Plane MCP server configured for Claude Code.
+      Config: {{ radiko_project_dir }}/.mcp.json
+      Workspace: {{ plane_workspace_slug }}
+      Plane URL: http://{{ plane_domain }}:{{ plane_port }}
+  tags: ['plane-mcp', 'plane-mcp-config']

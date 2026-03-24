@@ -68,11 +68,11 @@
   shell: |
     export ZPLUG_HOME="{{ ansible_env.HOMEBREW_PREFIX | default('/opt/homebrew') }}/opt/zplug"
     source "$ZPLUG_HOME/init.zsh"
-    zplug "mafredri/zsh-async", from:github
-    zplug "sindresorhus/pure", use:pure.zsh, from:github, as:theme
+    zplug "mafredri/zsh-async", on:github
+    zplug "sindresorhus/pure", use:pure.zsh, on:github, as:theme
     zplug "zsh-users/zsh-syntax-highlighting", as:plugin, defer:2
     zplug "zsh-users/zsh-autosuggestions", as:plugin, defer:2
-    zplug install
+    zplug install || true
   args:
     executable: /bin/zsh
   changed_when: false
