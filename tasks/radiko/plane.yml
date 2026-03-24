@@ -44,6 +44,13 @@
     line: "LISTEN_HTTP_PORT={{ plane_port }}"
   tags: ['plane-setup']
 
+- name: Set custom HTTPS port in .env to avoid port 443 conflict.
+  lineinfile:
+    path: "{{ plane_deploy_dir }}/.env"
+    regexp: "^LISTEN_HTTPS_PORT="
+    line: "LISTEN_HTTPS_PORT={{ plane_https_port }}"
+  tags: ['plane-setup']
+
 - name: Set WEB_URL to match domain and port.
   lineinfile:
     path: "{{ plane_deploy_dir }}/.env"
@@ -67,6 +74,12 @@
           restart: always
         space:
           restart: always
+          healthcheck:
+            test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3000/spaces/"]
+            interval: 30s
+            timeout: 5s
+            start_period: 10s
+            retries: 3
         admin:
           restart: always
         live:
