@@ -21,6 +21,11 @@
         fail_msg: "Ce playbook requiert un Mac Intel ou Apple Silicon."
       tags: ['always']
 
+    - name: Configure sudoers NOPASSWD (avant homebrew).
+      import_tasks: tasks/sudoers.yml
+      when: configure_sudoers
+      tags: ['sudoers']
+
     - name: Ensure Docker Desktop is available.
       command: docker --version
       register: docker_check
@@ -45,11 +50,6 @@
       become: true
 
   tasks:
-    # --- Sudoers (NOPASSWD pour éviter les timeouts sudo) ---
-    - import_tasks: tasks/sudoers.yml
-      when: configure_sudoers
-      tags: ['sudoers']
-
     # --- SSH ---
     - import_tasks: tasks/radiko/ssh.yml
       tags: ['ssh']
