@@ -50,7 +50,7 @@ if ! command -v ansible &>/dev/null; then
 fi
 
 # Clone playbook
-PLAYBOOK_DIR="$HOME/.mac-dev/mac-dev-playbook"
+PLAYBOOK_DIR="$HOME/mac-dev-playbook"
 if [ -d "$PLAYBOOK_DIR/.git" ]; then
     echo "Updating playbook..."
     git -C "$PLAYBOOK_DIR" pull --ff-only

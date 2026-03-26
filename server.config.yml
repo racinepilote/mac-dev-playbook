@@ -1,0 +1,85 @@
+---
+# server.config.yml — Configuration minimale pour Mac mini serveur Radiko
+# Mac mini 2018 (Intel i5 6-core, 32GB RAM, macOS Sonoma)
+# Usage: ansible-playbook server.yml
+
+downloads: ~/.ansible-downloads/
+
+# Désactiver tout ce qui est desktop/dev
+configure_dotfiles: true
+configure_terminal: false
+configure_osx: false
+configure_config: false
+configure_dock: false
+configure_sudoers: false
+configure_sublime: false
+configure_iterm_beautify: false
+
+# Dotfiles minimaux (zsh, git)
+dotfiles_repo: https://github.com/racinepilote/dotfiles.git
+dotfiles_repo_accept_hostkey: true
+dotfiles_repo_local_destination: ~/Development/GitHub/dotfiles
+dotfiles_files:
+  - .zshrc
+  - .gitignore
+  - .gitconfig
+  - .aliases
+  - .vimrc
+
+# Homebrew — packages essentiels serveur uniquement
+homebrew_installed_packages:
+  - git
+  - gh
+  - gpg
+  - httpie
+  - ssh-copy-id
+  - tmux
+  - wget
+  - openssl
+  - readline
+
+homebrew_taps:
+  - cloudflare/cloudflare
+
+homebrew_cask_appdir: /Applications
+homebrew_cask_apps:
+  - claude
+  - docker
+
+# Pas de Mac App Store
+mas_installed_apps: []
+mas_email: ""
+mas_password: ""
+
+# Pas de Dock customization
+dockitems_to_remove: []
+dockitems_to_persist: []
+
+# Pas de packages extra
+composer_packages: []
+gem_packages: []
+npm_packages: []
+pip_packages: []
+
+# Pas de post-provision tasks
+post_provision_tasks: []
+
+# --- Radiko server vars ---
+radiko_project_dir: "{{ ansible_env.HOME }}/radiko"
+plane_install_dir: "{{ ansible_env.HOME }}/radiko/plane"
+plane_port: 4680
+plane_https_port: 4443
+plane_domain: "{{ ansible_hostname }}"
+plane_workspace_slug: "radiko"
+plane_api_key: "{{ lookup('file', playbook_dir + '/.env') | regex_search('PLANE_API_KEY=(.+)', '\\1') | first }}"
+
+# SSH — ajoutez vos clés publiques ici pour accès sans mot de passe
+# Collez le contenu de ~/.ssh/id_ed25519.pub de votre laptop
+ssh_authorized_keys: []
+#  - "ssh-ed25519 AAAA... racinepilote@laptop"
+ssh_disable_password: false  # true pour forcer keys-only (plus sécuritaire)
+
+# Cloudflare Tunnel
+cloudflared_tunnel_name: "radiko-plane"
+cloudflared_hostname: "tasks.radiko.ca"
+cloudflared_service: "http://localhost:{{ plane_port }}"

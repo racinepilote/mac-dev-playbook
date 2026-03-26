@@ -11,6 +11,7 @@
   hosts: all
 
   vars_files:
+    - default.config.yml
     - server.config.yml
 
   pre_tasks:
