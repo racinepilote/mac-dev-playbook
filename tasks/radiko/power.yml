@@ -1,0 +1,50 @@
+---
+# Empêche le Mac mini serveur de se mettre en veille.
+# Le serveur doit rester allumé 24/7 pour Plane et Cloudflare Tunnel.
+
+- name: Disable system sleep.
+  command: sudo pmset -a sleep 0
+  become: true
+  changed_when: true
+  tags: ['power']
+
+- name: Disable display sleep.
+  command: sudo pmset -a displaysleep 0
+  become: true
+  changed_when: true
+  tags: ['power']
+
+- name: Disable disk sleep.
+  command: sudo pmset -a disksleep 0
+  become: true
+  changed_when: true
+  tags: ['power']
+
+- name: Disable hibernation.
+  command: sudo pmset -a hibernatemode 0
+  become: true
+  changed_when: true
+  tags: ['power']
+
+- name: Enable wake on network access.
+  command: sudo pmset -a womp 1
+  become: true
+  changed_when: true
+  tags: ['power']
+
+- name: Restart automatically on power failure.
+  command: sudo pmset -a autorestart 1
+  become: true
+  changed_when: true
+  tags: ['power']
+
+- name: Verify power settings.
+  command: pmset -g
+  register: pmset_status
+  changed_when: false
+  tags: ['power']
+
+- name: Show power settings.
+  debug:
+    msg: "{{ pmset_status.stdout }}"
+  tags: ['power']

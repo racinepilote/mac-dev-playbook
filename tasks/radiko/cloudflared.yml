@@ -84,13 +84,26 @@
     - tunnel_id.stdout is defined
   tags: ['cloudflared']
 
+- name: Check if cloudflared service is already installed.
+  stat:
+    path: "{{ ansible_env.HOME }}/Library/LaunchAgents/com.cloudflare.cloudflared.plist"
+  register: cloudflared_plist
+  when:
+    - tunnel_list.rc == 0
+    - tunnel_id.stdout is defined
+  tags: ['cloudflared']
+
+- name: Uninstall existing cloudflared service.
+  command: cloudflared service uninstall
+  when:
+    - tunnel_list.rc == 0
+    - tunnel_id.stdout is defined
+    - cloudflared_plist.stat.exists | default(false)
+  failed_when: false
+  tags: ['cloudflared']
+
 - name: Install cloudflared as a launchd service.
   command: cloudflared service install
-  register: service_install
-  changed_when: "'already exists' not in service_install.stderr"
-  failed_when:
-    - service_install.rc != 0
-    - "'already exists' not in service_install.stderr"
   when:
     - tunnel_list.rc == 0
     - tunnel_id.stdout is defined

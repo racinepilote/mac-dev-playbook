@@ -50,6 +50,10 @@
       become: true
 
   tasks:
+    # --- Power management (no sleep) ---
+    - import_tasks: tasks/radiko/power.yml
+      tags: ['power']
+
     # --- SSH ---
     - import_tasks: tasks/radiko/ssh.yml
       tags: ['ssh']
