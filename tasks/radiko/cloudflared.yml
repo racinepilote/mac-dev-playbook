@@ -1,0 +1,110 @@
+---
+# Installe et configure Cloudflare Tunnel pour exposer Plane sur tasks.radiko.ca
+# Prérequis: cloudflare/cloudflare tap dans homebrew_taps
+
+- name: Install cloudflared via Homebrew.
+  homebrew:
+    name: cloudflared
+    state: present
+  tags: ['cloudflared']
+
+- name: Check if cloudflared is already logged in.
+  command: cloudflared tunnel list
+  register: tunnel_list
+  changed_when: false
+  failed_when: false
+  tags: ['cloudflared']
+
+- name: Show cloudflared login instructions.
+  debug:
+    msg: |
+      cloudflared n'est pas authentifie.
+      Lancez manuellement : cloudflared tunnel login
+      Puis relancez ce playbook avec --tags cloudflared
+  when: tunnel_list.rc != 0
+  tags: ['cloudflared']
+
+- name: Check if tunnel already exists.
+  shell: cloudflared tunnel list | grep -c "{{ cloudflared_tunnel_name }}"
+  register: tunnel_exists
+  changed_when: false
+  failed_when: false
+  when: tunnel_list.rc == 0
+  tags: ['cloudflared']
+
+- name: Create Cloudflare Tunnel.
+  command: cloudflared tunnel create {{ cloudflared_tunnel_name }}
+  when:
+    - tunnel_list.rc == 0
+    - tunnel_exists.stdout | default('0') | int == 0
+  register: tunnel_created
+  tags: ['cloudflared']
+
+- name: Get tunnel ID.
+  shell: cloudflared tunnel list -o json | python3 -c "import sys,json; tunnels=json.load(sys.stdin); print(next(t['id'] for t in tunnels if t['name']=='{{ cloudflared_tunnel_name }}'))"
+  register: tunnel_id
+  changed_when: false
+  when: tunnel_list.rc == 0
+  tags: ['cloudflared']
+
+- name: Create cloudflared config directory.
+  file:
+    path: "{{ ansible_env.HOME }}/.cloudflared"
+    state: directory
+    mode: "0700"
+  when: tunnel_list.rc == 0
+  tags: ['cloudflared']
+
+- name: Write cloudflared config.yml.
+  copy:
+    content: |
+      tunnel: {{ tunnel_id.stdout }}
+      credentials-file: {{ ansible_env.HOME }}/.cloudflared/{{ tunnel_id.stdout }}.json
+
+      ingress:
+        - hostname: {{ cloudflared_hostname }}
+          service: {{ cloudflared_service }}
+        - service: http_status:404
+    dest: "{{ ansible_env.HOME }}/.cloudflared/config.yml"
+    mode: "0600"
+  when:
+    - tunnel_list.rc == 0
+    - tunnel_id.stdout is defined
+  tags: ['cloudflared']
+
+- name: Route DNS for tunnel.
+  command: cloudflared tunnel route dns {{ cloudflared_tunnel_name }} {{ cloudflared_hostname }}
+  register: dns_route
+  changed_when: "'already exists' not in dns_route.stderr"
+  failed_when:
+    - dns_route.rc != 0
+    - "'already exists' not in dns_route.stderr"
+  when:
+    - tunnel_list.rc == 0
+    - tunnel_id.stdout is defined
+  tags: ['cloudflared']
+
+- name: Install cloudflared as a launchd service.
+  command: cloudflared service install
+  register: service_install
+  changed_when: "'already exists' not in service_install.stderr"
+  failed_when:
+    - service_install.rc != 0
+    - "'already exists' not in service_install.stderr"
+  when:
+    - tunnel_list.rc == 0
+    - tunnel_id.stdout is defined
+  tags: ['cloudflared']
+
+- name: Show tunnel status.
+  debug:
+    msg: |
+      Cloudflare Tunnel configure:
+        Tunnel: {{ cloudflared_tunnel_name }}
+        ID:     {{ tunnel_id.stdout | default('N/A') }}
+        Route:  https://{{ cloudflared_hostname }} -> {{ cloudflared_service }}
+
+      Si le tunnel n'est pas encore actif, lancez:
+        cloudflared tunnel run {{ cloudflared_tunnel_name }}
+  when: tunnel_list.rc == 0
+  tags: ['cloudflared']

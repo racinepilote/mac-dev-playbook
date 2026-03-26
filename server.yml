@@ -1,0 +1,68 @@
+---
+# server.yml — Playbook minimaliste pour Mac mini serveur Radiko
+# Installe: Homebrew, Docker, Claude, Git, Cloudflare Tunnel, Plane
+#
+# Usage:
+#   ansible-playbook server.yml --ask-become-pass
+#   ansible-playbook server.yml --tags "plane"        # Plane seulement
+#   ansible-playbook server.yml --tags "cloudflared"   # Tunnel seulement
+
+- name: Configure Mac mini server for Radiko.
+  hosts: all
+
+  vars_files:
+    - server.config.yml
+
+  pre_tasks:
+    - name: Ensure Intel Mac compatibility.
+      assert:
+        that: ansible_architecture in ['x86_64', 'arm64']
+        fail_msg: "Ce playbook requiert un Mac Intel ou Apple Silicon."
+      tags: ['always']
+
+    - name: Ensure Docker Desktop is available.
+      command: docker --version
+      register: docker_check
+      changed_when: false
+      failed_when: false
+      tags: ['always']
+
+  roles:
+    - role: elliotweiser.osx-command-line-tools
+      tags: ['setup']
+
+    - role: geerlingguy.mac.homebrew
+      tags: ['homebrew']
+
+    - role: geerlingguy.dotfiles
+      when: configure_dotfiles
+      tags: ['dotfiles']
+
+  tasks:
+    # --- Cloudflared ---
+    - import_tasks: tasks/radiko/cloudflared.yml
+      tags: ['cloudflared']
+
+    # --- Radiko / Plane ---
+    - import_tasks: tasks/radiko/clone.yml
+      tags: ['clone']
+
+    - import_tasks: tasks/radiko/plane.yml
+      tags: ['plane']
+
+    - import_tasks: tasks/radiko/plane-mcp.yml
+      tags: ['plane-mcp']
+
+    # --- Verification finale ---
+    - name: Show server summary.
+      debug:
+        msg: |
+          ========================================
+          Mac mini serveur Radiko - Configuration terminee
+          ========================================
+          Docker:       {{ docker_check.stdout | default('non installe - lancer Docker Desktop') }}
+          Plane:        http://{{ plane_domain }}:{{ plane_port }}
+          Tunnel:       https://{{ cloudflared_hostname }}
+          MCP config:   {{ radiko_project_dir }}/.mcp.json
+          ========================================
+      tags: ['always']

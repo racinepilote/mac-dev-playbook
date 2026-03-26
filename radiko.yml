@@ -1,4 +1,12 @@
 ---
+# radiko.yml — Setup complet de l'environnement Radiko
+# Peut être lancé standalone ou inclus depuis server.yml
+#
+# Usage:
+#   ansible-playbook radiko.yml --ask-become-pass
+#   ansible-playbook radiko.yml --tags "plane"
+#   ansible-playbook radiko.yml --tags "plane-mcp"
+
 - name: Setup Radiko development environment.
   hosts: all
 
@@ -10,6 +18,32 @@
     plane_domain: "{{ ansible_hostname }}"
     plane_workspace_slug: "radiko"
     plane_api_key: "{{ lookup('file', playbook_dir + '/.env') | regex_search('PLANE_API_KEY=(.+)', '\\1') | first }}"
+
+  pre_tasks:
+    - name: Verify .env file exists.
+      stat:
+        path: "{{ playbook_dir }}/.env"
+      register: env_file
+      tags: ['always']
+
+    - name: Fail if .env is missing.
+      fail:
+        msg: "Fichier .env manquant. Creez {{ playbook_dir }}/.env avec PLANE_API_KEY=votre_cle"
+      when: not env_file.stat.exists
+      tags: ['always']
+
+    - name: Verify Docker is running.
+      command: docker info
+      register: docker_info
+      changed_when: false
+      failed_when: false
+      tags: ['always']
+
+    - name: Warn if Docker is not running.
+      fail:
+        msg: "Docker n'est pas en cours d'execution. Lancez Docker Desktop avant de continuer."
+      when: docker_info.rc != 0
+      tags: ['plane', 'plane-start']
 
   tasks:
     - import_tasks: tasks/radiko/clone.yml

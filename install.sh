@@ -2,9 +2,14 @@
 set -euo pipefail
 
 # --- macOS Dev Playbook Bootstrap ---
-# Compatible: macOS 26+ / Apple Silicon / Homebrew 4.x / Ansible 2.20+
+# Compatible: macOS 14+ (Sonoma) / Intel & Apple Silicon / Homebrew 4.x / Ansible 2.20+
+#
+# Usage:
+#   ./install.sh          # Mode desktop (main.yml)
+#   ./install.sh server   # Mode serveur Mac mini (server.yml + radiko.yml)
 
-export PATH="/opt/homebrew/bin:$HOME/.local/bin:$PATH"
+MODE="${1:-desktop}"
+export PATH="/opt/homebrew/bin:/usr/local/bin:$HOME/.local/bin:$PATH"
 
 # Xcode Command Line Tools
 if ! xcode-select -p &>/dev/null; then
@@ -20,11 +25,15 @@ if [ "$(uname -m)" = "arm64" ] && ! /usr/bin/pgrep -q oahd; then
     /usr/sbin/softwareupdate --install-rosetta --agree-to-license
 fi
 
-# Homebrew
+# Homebrew (Intel = /usr/local, Apple Silicon = /opt/homebrew)
 if ! command -v brew &>/dev/null; then
     echo "Installing Homebrew..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    eval "$(/opt/homebrew/bin/brew shellenv)"
+    if [ -f /opt/homebrew/bin/brew ]; then
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+    else
+        eval "$(/usr/local/bin/brew shellenv)"
+    fi
 fi
 
 # pipx + Ansible (isolated, no sudo, PEP 668 compliant)
@@ -64,6 +73,22 @@ SUDO_KEEPALIVE_PID=$!
 trap 'kill $SUDO_KEEPALIVE_PID 2>/dev/null' EXIT
 
 # Run playbook
-ansible-playbook main.yml --ask-become-pass
+if [ "$MODE" = "server" ]; then
+    echo "=== Mode SERVEUR (Mac mini) ==="
+    ansible-playbook server.yml --ask-become-pass
+    echo ""
+    echo "=== Radiko / Plane setup ==="
+    echo "Assurez-vous que Docker Desktop est lance avant de continuer."
+    read -p "Docker est pret? (y/n) " -n 1 -r
+    echo ""
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        ansible-playbook radiko.yml --ask-become-pass
+    else
+        echo "Lancez plus tard: ansible-playbook radiko.yml --ask-become-pass"
+    fi
+else
+    echo "=== Mode DESKTOP ==="
+    ansible-playbook main.yml --ask-become-pass
+fi
 
 echo "Done!"
