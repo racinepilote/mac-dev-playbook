@@ -2,11 +2,33 @@
 # Configure SSH server sur le Mac mini pour accès distant.
 # Ce task file s'exécute en local sur le Mac mini.
 
+- name: Check if SSH is already enabled.
+  command: systemsetup -getremotelogin
+  become: true
+  register: ssh_status
+  changed_when: false
+  tags: ['ssh']
+
 - name: Enable Remote Login (SSH server).
   command: systemsetup -setremotelogin on
   become: true
   register: remote_login
   changed_when: "'already' not in remote_login.stdout | default('')"
+  failed_when: false
+  when: "'Off' in ssh_status.stdout"
+  tags: ['ssh']
+
+- name: Warn if Remote Login could not be enabled automatically.
+  debug:
+    msg: |
+      ATTENTION: Remote Login n'a pas pu etre active automatiquement.
+      Sur macOS Sonoma+, activez-le manuellement:
+        1. System Settings > Privacy & Security > Full Disk Access > activer Terminal
+        2. sudo systemsetup -setremotelogin on
+      Ou: System Settings > General > Sharing > Remote Login > ON
+  when:
+    - "'Off' in ssh_status.stdout"
+    - remote_login.rc | default(0) != 0
   tags: ['ssh']
 
 - name: Verify SSH is listening.
@@ -14,6 +36,7 @@
     port: 22
     host: 127.0.0.1
     timeout: 5
+  when: "'On' in ssh_status.stdout or (remote_login.rc | default(1) == 0)"
   tags: ['ssh']
 
 - name: Ensure .ssh directory exists.
