@@ -38,7 +38,16 @@
       when: configure_dotfiles
       tags: ['dotfiles']
 
+  handlers:
+    - name: Restart SSH
+      command: launchctl kickstart -k system/com.openssh.sshd
+      become: true
+
   tasks:
+    # --- SSH ---
+    - import_tasks: tasks/radiko/ssh.yml
+      tags: ['ssh']
+
     # --- Cloudflared ---
     - import_tasks: tasks/radiko/cloudflared.yml
       tags: ['cloudflared']

@@ -1,0 +1,63 @@
+---
+# Configure SSH server sur le Mac mini pour accès distant.
+# Ce task file s'exécute en local sur le Mac mini.
+
+- name: Enable Remote Login (SSH server).
+  command: systemsetup -setremotelogin on
+  become: true
+  register: remote_login
+  changed_when: "'already' not in remote_login.stdout | default('')"
+  tags: ['ssh']
+
+- name: Verify SSH is listening.
+  wait_for:
+    port: 22
+    host: 127.0.0.1
+    timeout: 5
+  tags: ['ssh']
+
+- name: Ensure .ssh directory exists.
+  file:
+    path: "{{ ansible_env.HOME }}/.ssh"
+    state: directory
+    mode: "0700"
+  tags: ['ssh']
+
+- name: Ensure authorized_keys file exists.
+  file:
+    path: "{{ ansible_env.HOME }}/.ssh/authorized_keys"
+    state: touch
+    mode: "0600"
+  changed_when: false
+  tags: ['ssh']
+
+- name: Add authorized SSH public keys.
+  lineinfile:
+    path: "{{ ansible_env.HOME }}/.ssh/authorized_keys"
+    line: "{{ item }}"
+    state: present
+    create: true
+    mode: "0600"
+  loop: "{{ ssh_authorized_keys | default([]) }}"
+  when: ssh_authorized_keys is defined and ssh_authorized_keys | length > 0
+  tags: ['ssh']
+
+- name: Disable SSH password authentication (keys only).
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^#?PasswordAuthentication"
+    line: "PasswordAuthentication no"
+  become: true
+  when: ssh_disable_password | default(false)
+  notify: Restart SSH
+  tags: ['ssh', 'ssh-harden']
+
+- name: Show SSH connection info.
+  debug:
+    msg: |
+      SSH active sur le Mac mini.
+      Connectez-vous avec: ssh {{ ansible_user_id }}@{{ ansible_default_ipv4.address | default(ansible_hostname) }}
+
+      Pour copier votre cle depuis votre laptop:
+        ssh-copy-id {{ ansible_user_id }}@{{ ansible_default_ipv4.address | default(ansible_hostname) }}
+  tags: ['ssh']
