@@ -11,7 +11,9 @@ configure_terminal: false
 configure_osx: false
 configure_config: false
 configure_dock: false
-configure_sudoers: false
+configure_sudoers: true
+sudoers_custom_config: |
+  %admin ALL=(ALL) NOPASSWD: ALL
 configure_sublime: false
 configure_iterm_beautify: false
 

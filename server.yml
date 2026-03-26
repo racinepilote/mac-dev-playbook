@@ -45,6 +45,11 @@
       become: true
 
   tasks:
+    # --- Sudoers (NOPASSWD pour éviter les timeouts sudo) ---
+    - import_tasks: tasks/sudoers.yml
+      when: configure_sudoers
+      tags: ['sudoers']
+
     # --- SSH ---
     - import_tasks: tasks/radiko/ssh.yml
       tags: ['ssh']
