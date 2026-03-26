@@ -34,11 +34,13 @@ homebrew_installed_packages:
   - gh
   - gpg
   - httpie
+  - node
   - ssh-copy-id
   - tmux
   - wget
   - openssl
   - readline
+  - zsh-history-substring-search
 
 homebrew_taps:
   - cloudflare/cloudflare
