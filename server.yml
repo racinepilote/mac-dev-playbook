@@ -58,10 +58,7 @@
     - import_tasks: tasks/radiko/cloudflared.yml
       tags: ['cloudflared']
 
-    # --- Radiko / Plane ---
-    - import_tasks: tasks/radiko/clone.yml
-      tags: ['clone']
-
+    # --- Plane ---
     - import_tasks: tasks/radiko/plane.yml
       tags: ['plane']
 

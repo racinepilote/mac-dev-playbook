@@ -67,8 +67,8 @@ pip_packages: []
 post_provision_tasks: []
 
 # --- Radiko server vars ---
-radiko_project_dir: "{{ ansible_env.HOME }}/radiko"
-plane_install_dir: "{{ ansible_env.HOME }}/radiko/plane"
+radiko_project_dir: "{{ ansible_facts['env']['HOME'] }}/radiko"
+plane_install_dir: "{{ ansible_facts['env']['HOME'] }}/radiko/plane"
 plane_port: 4680
 plane_https_port: 4443
 plane_domain: "{{ ansible_hostname }}"
