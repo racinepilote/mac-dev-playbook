@@ -51,18 +51,18 @@
     line: "LISTEN_HTTPS_PORT={{ plane_https_port }}"
   tags: ['plane-setup']
 
-- name: Set WEB_URL to match domain and port.
+- name: Set WEB_URL to public tunnel URL.
   lineinfile:
     path: "{{ plane_deploy_dir }}/.env"
     regexp: "^WEB_URL="
-    line: "WEB_URL=http://{{ plane_domain }}:{{ plane_port }}"
+    line: "WEB_URL=https://{{ cloudflared_hostname }}"
   tags: ['plane-setup']
 
-- name: Set CORS_ALLOWED_ORIGINS to allow both hostname and localhost.
+- name: Set CORS_ALLOWED_ORIGINS to allow tunnel, hostname, and localhost.
   lineinfile:
     path: "{{ plane_deploy_dir }}/.env"
     regexp: "^CORS_ALLOWED_ORIGINS="
-    line: "CORS_ALLOWED_ORIGINS=http://{{ plane_domain }}:{{ plane_port }},http://localhost:{{ plane_port }}"
+    line: "CORS_ALLOWED_ORIGINS=https://{{ cloudflared_hostname }},http://{{ plane_domain }}:{{ plane_port }},http://localhost:{{ plane_port }}"
   tags: ['plane-setup']
 
 - name: Create docker-compose.override.yml for restart policy.
@@ -121,6 +121,7 @@
     msg: |
       {{ plane_status.stdout }}
 
-      Plane est accessible sur : http://{{ plane_domain }}:{{ plane_port }}
+      Plane est accessible sur : https://{{ cloudflared_hostname }}
+      (local: http://{{ plane_domain }}:{{ plane_port }})
   when: plane_status.stdout is defined
   tags: ['plane-start']
