@@ -66,9 +66,6 @@
     - import_tasks: tasks/radiko/plane.yml
       tags: ['plane']
 
-    - import_tasks: tasks/radiko/plane-mcp.yml
-      tags: ['plane-mcp']
-
     # --- Verification finale ---
     - name: Show server summary.
       debug:
@@ -79,6 +76,5 @@
           Docker:       {{ docker_check.stdout | default('non installe - lancer Docker Desktop') }}
           Plane:        http://{{ plane_domain }}:{{ plane_port }}
           Tunnel:       https://{{ cloudflared_hostname }}
-          MCP config:   {{ radiko_project_dir }}/.mcp.json
           ========================================
       tags: ['always']

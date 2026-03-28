@@ -15,7 +15,7 @@
     plane_install_dir: "{{ radiko_project_dir }}/plane"
     plane_port: 4680
     plane_https_port: 4443
-    plane_domain: "{{ ansible_hostname }}"
+    plane_domain: "radikos-mini.localdomain"
     plane_workspace_slug: "radiko"
     plane_api_key: "{{ lookup('file', playbook_dir + '/.env') | regex_search('PLANE_API_KEY=(.+)', '\\1') | first }}"
 
